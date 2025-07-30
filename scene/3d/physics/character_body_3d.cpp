@@ -46,6 +46,7 @@ bool CharacterBody3D::move_and_slide() {
 	Transform3D gt = get_global_transform();
 	previous_position = gt.origin;
 
+
 	Vector3 current_platform_velocity = platform_velocity;
 
 	if ((collision_state.floor || collision_state.wall) && platform_rid.is_valid()) {
@@ -94,9 +95,9 @@ bool CharacterBody3D::move_and_slide() {
 		PhysicsServer3D::MotionParameters parameters(get_global_transform(), current_platform_velocity * delta, margin);
 		parameters.recovery_as_collision = true; // Also report collisions generated only from recovery.
 
-		parameters.exclude_bodies.insert(platform_rid);
+		//parameters.exclude_bodies.insert(platform_rid);
 		if (platform_object_id.is_valid()) {
-			parameters.exclude_objects.insert(platform_object_id);
+			//parameters.exclude_objects.insert(platform_object_id);
 		}
 
 		PhysicsServer3D::MotionResult floor_result;
@@ -787,6 +788,15 @@ CharacterBody3D::PlatformOnLeave CharacterBody3D::get_platform_on_leave() const 
 	return platform_on_leave;
 }
 
+void CharacterBody3D::set_platform_data(RID p_rid, uint64_t p_collider_id, Vector3 p_velocity, Vector3 p_angular_velocity) {
+	PhysicsServer3D::MotionCollision collision;
+	collision.collider = p_rid;
+	collision.collider_id = p_collider_id;
+	collision.collider_velocity = p_velocity;
+	collision.collider_angular_velocity = p_angular_velocity;
+	_set_platform_data(collision);
+}
+
 int CharacterBody3D::get_max_slides() const {
 	return max_slides;
 }
@@ -881,6 +891,7 @@ void CharacterBody3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_motion_mode"), &CharacterBody3D::get_motion_mode);
 	ClassDB::bind_method(D_METHOD("set_platform_on_leave", "on_leave_apply_velocity"), &CharacterBody3D::set_platform_on_leave);
 	ClassDB::bind_method(D_METHOD("get_platform_on_leave"), &CharacterBody3D::get_platform_on_leave);
+	ClassDB::bind_method(D_METHOD("set_platform_data", "platform_rid", "collider_id", "velocity", "angular_velocity"), &CharacterBody3D::set_platform_data);
 
 	ClassDB::bind_method(D_METHOD("is_on_floor"), &CharacterBody3D::is_on_floor);
 	ClassDB::bind_method(D_METHOD("is_on_floor_only"), &CharacterBody3D::is_on_floor_only);

@@ -138,6 +138,12 @@ void RendererSceneCull::camera_set_compositor(RID p_camera, RID p_compositor) {
 	camera->compositor = p_compositor;
 }
 
+void RendererSceneCull::camera_set_clip_plane(RID p_camera, Vector4 p_clip_plane) {
+	Camera *camera = camera_owner.get_or_null(p_camera);
+	ERR_FAIL_NULL(camera);
+	camera->clip_plane = p_clip_plane;
+}
+
 void RendererSceneCull::camera_set_use_vertical_aspect(RID p_camera, bool p_enable) {
 	Camera *camera = camera_owner.get_or_null(p_camera);
 	ERR_FAIL_NULL(camera);
@@ -2655,7 +2661,7 @@ void RendererSceneCull::render_camera(const Ref<RenderSceneBuffers> &p_render_bu
 			} break;
 		}
 
-		camera_data.set_camera(transform, projection, is_orthogonal, is_frustum, vaspect, jitter, taa_frame_count, camera->visible_layers);
+		camera_data.set_camera(transform, projection, is_orthogonal, is_frustum, vaspect, jitter, taa_frame_count, camera->visible_layers, camera->clip_plane);
 #ifndef XR_DISABLED
 	} else {
 		XRServer *xr_server = XRServer::get_singleton();

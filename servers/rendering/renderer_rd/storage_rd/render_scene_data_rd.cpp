@@ -69,7 +69,7 @@ RID RenderSceneDataRD::create_uniform_buffer() {
 	return RD::get_singleton()->uniform_buffer_create(sizeof(UBODATA));
 }
 
-void RenderSceneDataRD::update_ubo(RID p_uniform_buffer, RS::ViewportDebugDraw p_debug_mode, RID p_env, RID p_reflection_probe_instance, RID p_camera_attributes, bool p_pancake_shadows, const Size2i &p_screen_size, const Color &p_default_bg_color, float p_luminance_multiplier, bool p_opaque_render_buffers, bool p_apply_alpha_multiplier) {
+void RenderSceneDataRD::update_ubo(RID p_uniform_buffer, RS::ViewportDebugDraw p_debug_mode, RID p_env, RID p_reflection_probe_instance, RID p_camera_attributes, bool p_pancake_shadows, const Size2i &p_screen_size, const Color &p_default_bg_color, float p_luminance_multiplier, bool p_opaque_render_buffers, bool p_apply_alpha_multiplier, Vector4 p_clip_plane) {
 	RendererSceneRenderRD *render_scene_render = RendererSceneRenderRD::get_singleton();
 
 	UBODATA ubo_data;
@@ -119,6 +119,11 @@ void RenderSceneDataRD::update_ubo(RID p_uniform_buffer, RS::ViewportDebugDraw p
 	ubo.flags = 0;
 
 	ubo.flags |= p_pancake_shadows ? SCENE_DATA_FLAGS_USE_PANCAKE_SHADOWS : 0;
+
+	ubo.clip_plane[0] = p_clip_plane.x;
+	ubo.clip_plane[1] = p_clip_plane.y;
+	ubo.clip_plane[2] = p_clip_plane.z;
+	ubo.clip_plane[3] = p_clip_plane.w;
 
 	RendererRD::MaterialStorage::store_soft_shadow_kernel(render_scene_render->directional_penumbra_shadow_kernel_get(), ubo.directional_penumbra_shadow_kernel);
 	RendererRD::MaterialStorage::store_soft_shadow_kernel(render_scene_render->directional_soft_shadow_kernel_get(), ubo.directional_soft_shadow_kernel);

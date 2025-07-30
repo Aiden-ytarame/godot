@@ -51,6 +51,7 @@ public:
 	bool cam_frustum = false;
 	bool flip_y = false;
 
+	Vector4 clip_plane = Vector4();
 	// For billboards to cast correct shadows.
 	Transform3D main_cam_transform;
 
@@ -91,7 +92,7 @@ public:
 	virtual Projection get_view_projection(uint32_t p_view) const override;
 
 	RID create_uniform_buffer();
-	void update_ubo(RID p_uniform_buffer, RS::ViewportDebugDraw p_debug_mode, RID p_env, RID p_reflection_probe_instance, RID p_camera_attributes, bool p_pancake_shadows, const Size2i &p_screen_size, const Color &p_default_bg_color, float p_luminance_multiplier, bool p_opaque_render_buffers, bool p_apply_alpha_multiplier);
+	void update_ubo(RID p_uniform_buffer, RS::ViewportDebugDraw p_debug_mode, RID p_env, RID p_reflection_probe_instance, RID p_camera_attributes, bool p_pancake_shadows, const Size2i &p_screen_size, const Color &p_default_bg_color, float p_luminance_multiplier, bool p_opaque_render_buffers, bool p_apply_alpha_multiplier, Vector4 p_clip_plane);
 	virtual RID get_uniform_buffer() const override;
 
 private:
@@ -168,6 +169,8 @@ private:
 		float IBL_exposure_normalization; // Adjusts for baked exposure.
 		uint32_t camera_visible_layers;
 		float pass_alpha_multiplier;
+
+		float clip_plane[4];
 	};
 
 	struct UBODATA {

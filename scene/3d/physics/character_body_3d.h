@@ -111,6 +111,7 @@ public:
 	void set_platform_on_leave(PlatformOnLeave p_on_leave_velocity);
 	PlatformOnLeave get_platform_on_leave() const;
 
+	void set_platform_data(RID p_rid, uint64_t p_collider_id, Vector3 p_velocity, Vector3 p_angular_velocity);
 	CharacterBody3D();
 
 private:
@@ -143,6 +144,7 @@ private:
 	int max_slides = 6;
 	int platform_layer = 0;
 	RID platform_rid;
+
 	ObjectID platform_object_id;
 	uint32_t platform_floor_layers = UINT32_MAX;
 	uint32_t platform_wall_layers = 0;

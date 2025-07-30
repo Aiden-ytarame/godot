@@ -42,6 +42,7 @@ private:
 	bool sync_to_physics = true;
 
 	Transform3D last_valid_transform;
+	Transform3D constant_local_transform; //used for sync to physics
 
 	static void _body_state_changed_callback(void *p_instance, PhysicsDirectBodyState3D *p_state);
 	void _body_state_changed(PhysicsDirectBodyState3D *p_state);
@@ -53,11 +54,14 @@ protected:
 public:
 	virtual Vector3 get_linear_velocity() const override;
 	virtual Vector3 get_angular_velocity() const override;
+	Transform3D get_constant_local_transform() const;
+	void parent_physics_updated(const Transform3D& parent_transform);
 
 	AnimatableBody3D();
 
 private:
 	void _update_kinematic_motion();
+	void _update_children_animatable_physics(const Transform3D& transform);
 
 	void set_sync_to_physics(bool p_enable);
 	bool is_sync_to_physics_enabled() const;

@@ -1020,6 +1020,7 @@ void CSGShape3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_collision_mask_value", "layer_number"), &CSGShape3D::get_collision_mask_value);
 
 	ClassDB::bind_method(D_METHOD("_get_root_collision_instance"), &CSGShape3D::_get_root_collision_instance);
+	ClassDB::bind_method(D_METHOD("get_root_collision_instance"), &CSGShape3D::_get_root_collision_instance);
 
 	ClassDB::bind_method(D_METHOD("set_collision_layer_value", "layer_number", "value"), &CSGShape3D::set_collision_layer_value);
 	ClassDB::bind_method(D_METHOD("get_collision_layer_value", "layer_number"), &CSGShape3D::get_collision_layer_value);

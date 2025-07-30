@@ -179,7 +179,7 @@ uint cluster_get_range_clip_mask(uint i, uint z_min, uint z_max) {
 }
 #endif // !defined(MODE_RENDER_DEPTH) && !defined(MODE_UNSHADED) && defined(USE_VERTEX_LIGHTING)
 invariant gl_Position;
-
+invariant gl_ClipDistance;
 #GLOBALS
 
 #ifdef USE_DOUBLE_PRECISION
@@ -229,7 +229,6 @@ void vertex_shader(vec3 vertex_input,
 #if defined(COLOR_USED)
 	color_interp = color_attrib;
 #endif
-
 	mat4 inv_view_matrix = scene_data.inv_view_matrix;
 
 #ifdef USE_DOUBLE_PRECISION
@@ -454,10 +453,13 @@ void vertex_shader(vec3 vertex_input,
 #endif
 #endif // !defined(SKIP_TRANSFORM_USED) && !defined(VERTEX_WORLD_COORDS_USED)
 
+    vec3 worldPos = (scene_data.inv_view_matrix * vec4(vertex, 1.0)).xyz;
+
 //using world coordinates
 #if !defined(SKIP_TRANSFORM_USED) && defined(VERTEX_WORLD_COORDS_USED)
 
 	vertex = (scene_data.view_matrix * vec4(vertex, 1.0)).xyz;
+
 #ifdef NORMAL_USED
 	normal = (scene_data.view_matrix * vec4(normal, 0.0)).xyz;
 #endif
@@ -468,6 +470,7 @@ void vertex_shader(vec3 vertex_input,
 #endif
 #endif
 
+    gl_ClipDistance[0] = dot(scene_data.clip_plane, vec4(worldPos, 1));
 	vertex_interp = vertex;
 
 	// Normalize TBN vectors before interpolation, per MikkTSpace.
@@ -802,7 +805,7 @@ void main() {
 
 	// Current vertex.
 	global_time = scene_data_block.data.time;
-	vertex_shader(vertex,
+    vertex_shader(vertex,
 #ifdef NORMAL_USED
 			normal,
 #endif

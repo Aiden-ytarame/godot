@@ -38,6 +38,30 @@ Vector3 AnimatableBody3D::get_angular_velocity() const {
 	return angular_velocity;
 }
 
+Transform3D AnimatableBody3D::get_constant_local_transform() const {
+	return constant_local_transform;
+}
+
+void AnimatableBody3D::parent_physics_updated(const Transform3D &parent_transform) {
+	if (is_set_as_top_level()) {
+		return;
+	}
+
+	Transform3D new_transform = parent_transform * constant_local_transform;
+	PhysicsServer3D::get_singleton()->body_set_state(get_rid(), PhysicsServer3D::BODY_STATE_TRANSFORM, new_transform);
+	_update_children_animatable_physics(new_transform);
+}
+
+void AnimatableBody3D::_update_children_animatable_physics(const Transform3D &transform) {
+	for (auto node :  get_children(false)) {
+		if (auto animatable = cast_to<AnimatableBody3D>(node)) {
+			if (animatable->is_sync_to_physics_enabled()) {
+				animatable->parent_physics_updated(transform);
+			}
+		}
+	}
+}
+
 void AnimatableBody3D::set_sync_to_physics(bool p_enable) {
 	if (sync_to_physics == p_enable) {
 		return;
@@ -62,6 +86,7 @@ void AnimatableBody3D::_update_kinematic_motion() {
 	if (sync_to_physics) {
 		set_only_update_transform_changes(true);
 		set_notify_local_transform(true);
+		constant_local_transform = get_transform();
 	} else {
 		set_only_update_transform_changes(false);
 		set_notify_local_transform(false);
@@ -104,7 +129,9 @@ void AnimatableBody3D::_notification(int p_what) {
 			// Used by sync to physics, send the new transform to the physics...
 			Transform3D new_transform = get_global_transform();
 
+			//very high chance we gotta change const local transform here
 			PhysicsServer3D::get_singleton()->body_set_state(get_rid(), PhysicsServer3D::BODY_STATE_TRANSFORM, new_transform);
+			_update_children_animatable_physics(new_transform);
 
 			// ... but then revert changes.
 			set_notify_local_transform(false);

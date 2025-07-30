@@ -541,11 +541,20 @@ void RigidBody3D::apply_central_impulse(const Vector3 &p_impulse) {
 void RigidBody3D::apply_impulse(const Vector3 &p_impulse, const Vector3 &p_position) {
 	PhysicsServer3D *singleton = PhysicsServer3D::get_singleton();
 	singleton->body_apply_impulse(get_rid(), p_impulse, p_position);
+
+	if (GDVIRTUAL_IS_OVERRIDDEN(_apply_impulse)) {
+		GDVIRTUAL_CALL(_apply_impulse, p_impulse, p_position);
+	}
 }
 
 void RigidBody3D::apply_torque_impulse(const Vector3 &p_impulse) {
 	PhysicsServer3D::get_singleton()->body_apply_torque_impulse(get_rid(), p_impulse);
+
+	if (GDVIRTUAL_IS_OVERRIDDEN(_apply_torque_impulse)) {
+		GDVIRTUAL_CALL(_apply_torque_impulse, p_impulse);
+	}
 }
+
 
 void RigidBody3D::apply_central_force(const Vector3 &p_force) {
 	PhysicsServer3D::get_singleton()->body_apply_central_force(get_rid(), p_force);
@@ -554,10 +563,18 @@ void RigidBody3D::apply_central_force(const Vector3 &p_force) {
 void RigidBody3D::apply_force(const Vector3 &p_force, const Vector3 &p_position) {
 	PhysicsServer3D *singleton = PhysicsServer3D::get_singleton();
 	singleton->body_apply_force(get_rid(), p_force, p_position);
+
+	if (GDVIRTUAL_IS_OVERRIDDEN(_apply_force)) {
+		GDVIRTUAL_CALL(_apply_force, p_force, p_position);
+	}
 }
 
 void RigidBody3D::apply_torque(const Vector3 &p_torque) {
 	PhysicsServer3D::get_singleton()->body_apply_torque(get_rid(), p_torque);
+	
+	if (GDVIRTUAL_IS_OVERRIDDEN(_apply_torque)) {
+		GDVIRTUAL_CALL(_apply_torque, p_torque);
+	}
 }
 
 void RigidBody3D::add_constant_central_force(const Vector3 &p_force) {
@@ -760,6 +777,10 @@ void RigidBody3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_colliding_bodies"), &RigidBody3D::get_colliding_bodies);
 
 	GDVIRTUAL_BIND(_integrate_forces, "state");
+	GDVIRTUAL_BIND(_apply_force, "force", "position");
+	GDVIRTUAL_BIND(_apply_impulse, "impulse", "position");
+	GDVIRTUAL_BIND(_apply_torque, "torque");
+	GDVIRTUAL_BIND(_apply_torque_impulse, "impulse");
 
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "mass", PROPERTY_HINT_RANGE, "0.001,1000,0.001,or_greater,exp,suffix:kg"), "set_mass", "get_mass");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "physics_material_override", PROPERTY_HINT_RESOURCE_TYPE, "PhysicsMaterial"), "set_physics_material_override", "get_physics_material_override");

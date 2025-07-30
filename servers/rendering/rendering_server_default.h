@@ -674,6 +674,7 @@ public:
 	FUNC2(camera_set_environment, RID, RID)
 	FUNC2(camera_set_camera_attributes, RID, RID)
 	FUNC2(camera_set_compositor, RID, RID)
+	FUNC2(camera_set_clip_plane, RID, Vector4)
 	FUNC2(camera_set_use_vertical_aspect, RID, bool)
 
 	/* OCCLUDER */

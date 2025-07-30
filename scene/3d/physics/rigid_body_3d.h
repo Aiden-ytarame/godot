@@ -136,6 +136,10 @@ protected:
 	void _validate_property(PropertyInfo &p_property) const;
 
 	GDVIRTUAL1(_integrate_forces, PhysicsDirectBodyState3D *)
+	GDVIRTUAL2(_apply_force, Vector3, Vector3)
+	GDVIRTUAL2(_apply_impulse, Vector3, Vector3)
+	GDVIRTUAL1(_apply_torque, Vector3)
+	GDVIRTUAL1(_apply_torque_impulse, Vector3)
 
 	virtual void _body_state_changed(PhysicsDirectBodyState3D *p_state);
 
