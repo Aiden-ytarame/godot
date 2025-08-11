@@ -333,7 +333,7 @@ private:
 			float compressed_aabb_position[4];
 			float compressed_aabb_size[4];
 			float uv_scale[4];
-
+			float clip_plane[4];
 			// These setters allow us to copy the data over with operation when using floats.
 			inline void set_lightmap_uv_scale(const Rect2 &p_rect) {
 #ifdef REAL_T_IS_DOUBLE
@@ -373,6 +373,18 @@ private:
 #else
 				Vector4 *uv_scale_vec4 = reinterpret_cast<Vector4 *>(uv_scale);
 				*uv_scale_vec4 = p_uv_scale;
+#endif
+			}
+
+			inline void set_clip_plane(const Vector4 &p_clip_plane) {
+#ifdef REAL_T_IS_DOUBLE
+				clip_plane[0] = p_clip_plane.x;
+				clip_plane[1] = p_clip_plane.y;
+				clip_plane[2] = p_clip_plane.z;
+				clip_plane[3] = p_clip_plane.w;
+#else
+				Vector4 *clip_plane_vec4 = reinterpret_cast<Vector4 *>(clip_plane);
+				*clip_plane_vec4 = p_clip_plane;
 #endif
 			}
 		};

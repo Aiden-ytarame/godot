@@ -110,6 +110,10 @@ void RenderGeometryInstanceBase::set_transparency(float p_transparency) {
 	force_alpha = CLAMP(1.0 - p_transparency, 0, 1);
 }
 
+void RenderGeometryInstanceBase::set_clip_plane(const Vector4 &p_clip_pane) {
+	clip_plane = p_clip_pane;
+}
+
 void RenderGeometryInstanceBase::set_use_baked_light(bool p_enable) {
 	data->use_baked_light = p_enable;
 

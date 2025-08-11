@@ -125,7 +125,7 @@ private:
 	VisibilityRangeFadeMode visibility_range_fade_mode = VISIBILITY_RANGE_FADE_DISABLED;
 
 	float transparency = 0.0f;
-
+	Vector4 clip_plane = Vector4(0,0,0,0);
 	float lod_bias = 1.0;
 
 	mutable HashMap<StringName, Variant> instance_shader_parameters;
@@ -153,6 +153,9 @@ public:
 
 	void set_transparency(float p_transparency);
 	float get_transparency() const;
+
+	void set_clip_plane(const Vector4 &p_plane);
+	Vector4 get_clip_plane() const;
 
 	void set_visibility_range_begin(float p_dist);
 	float get_visibility_range_begin() const;

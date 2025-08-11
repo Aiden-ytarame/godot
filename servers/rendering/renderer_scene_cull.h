@@ -419,6 +419,8 @@ public:
 		bool ignore_occlusion_culling;
 		bool ignore_all_culling;
 
+		Vector4 clip_plane;
+
 		Vector<RID> materials;
 
 		RS::ShadowCastingSetting cast_shadows;
@@ -1045,6 +1047,8 @@ public:
 	virtual void instance_set_visibility_parent(RID p_instance, RID p_parent_instance);
 
 	virtual void instance_set_ignore_culling(RID p_instance, bool p_enabled);
+
+	virtual void instance_set_clip_plane(RID p_instance, const Vector4 &p_clip_plane);
 
 	bool _update_instance_visibility_depth(Instance *p_instance);
 	void _update_instance_visibility_dependencies(Instance *p_instance) const;

@@ -323,6 +323,7 @@ struct InstanceData {
 	vec4 compressed_aabb_position_pad; // Only .xyz is used. .w is padding.
 	vec4 compressed_aabb_size_pad; // Only .xyz is used. .w is padding.
 	vec4 uv_scale;
+    vec4 clip_plane;
 };
 
 layout(set = 1, binding = 2, std430) buffer restrict readonly InstanceDataBuffer {

@@ -246,6 +246,7 @@ bool SceneCacheInterface::send_object_cache(Object *p_obj, int p_peer_id, int &r
 			peers_to_add.push_back(p_peer_id); // Need to also be notified.
 			has_all_peers = false;
 		} else if (!(*confirmed)) {
+			//peers_to_add.push_back(p_peer_id);
 			has_all_peers = false;
 		}
 	} else {
@@ -260,6 +261,7 @@ bool SceneCacheInterface::send_object_cache(Object *p_obj, int p_peer_id, int &r
 				peers_to_add.push_back(E.key); // Need to also be notified.
 				has_all_peers = false;
 			} else if (!(*confirmed)) {
+				//peers_to_add.push_back(p_peer_id);
 				has_all_peers = false;
 			}
 		}
@@ -288,6 +290,7 @@ Object *SceneCacheInterface::get_cached_object(int p_from, uint32_t p_cache_id) 
 			recv_node->oid = node->get_instance_id();
 		}
 	}
+
 	ERR_FAIL_NULL_V_MSG(node, nullptr, vformat("Failed to get cached node from peer %d with cache ID %d.", p_from, p_cache_id));
 	return node;
 }

@@ -5125,6 +5125,7 @@ bool GDScriptParser::rpc_annotation(AnnotationNode *p_annotation, Node *p_target
 	rpc_config["rpc_mode"] = MultiplayerAPI::RPC_MODE_AUTHORITY;
 	if (!p_annotation->resolved_arguments.is_empty()) {
 		unsigned char locality_args = 0;
+		unsigned char relay_args = 0;
 		unsigned char permission_args = 0;
 		unsigned char transfer_mode_args = 0;
 
@@ -5141,12 +5142,21 @@ bool GDScriptParser::rpc_annotation(AnnotationNode *p_annotation, Node *p_target
 			} else if (arg == "call_remote") {
 				locality_args++;
 				rpc_config["call_local"] = false;
+			} else if (arg == "relay") {
+				relay_args++;
+				rpc_config["relay"] = true;
+			} else if (arg == "no_relay") {
+				relay_args++;
+				rpc_config["relay"] = false;
 			} else if (arg == "any_peer") {
 				permission_args++;
 				rpc_config["rpc_mode"] = MultiplayerAPI::RPC_MODE_ANY_PEER;
 			} else if (arg == "authority") {
 				permission_args++;
 				rpc_config["rpc_mode"] = MultiplayerAPI::RPC_MODE_AUTHORITY;
+			} else if (arg == "server") {
+				permission_args++;
+				rpc_config["rpc_mode"] = MultiplayerAPI::RPC_MODE_SERVER;
 			} else if (arg == "reliable") {
 				transfer_mode_args++;
 				rpc_config["transfer_mode"] = MultiplayerPeer::TRANSFER_MODE_RELIABLE;
@@ -5157,16 +5167,18 @@ bool GDScriptParser::rpc_annotation(AnnotationNode *p_annotation, Node *p_target
 				transfer_mode_args++;
 				rpc_config["transfer_mode"] = MultiplayerPeer::TRANSFER_MODE_UNRELIABLE_ORDERED;
 			} else {
-				push_error(R"(Invalid RPC argument. Must be one of: "call_local"/"call_remote" (local calls), "any_peer"/"authority" (permission), "reliable"/"unreliable"/"unreliable_ordered" (transfer mode).)", p_annotation);
+				push_error(R"(Invalid RPC argument. Must be one of: "call_local"/"call_remote" (local calls), "any_peer"/"authority"/"server" (permission), "reliable"/"unreliable"/"unreliable_ordered" (transfer mode), "relay"/"no_relay" (relay).)", p_annotation);
 			}
 		}
 
 		if (locality_args > 1) {
 			push_error(R"(Invalid RPC config. The locality ("call_local"/"call_remote") must be specified no more than once.)", p_annotation);
 		} else if (permission_args > 1) {
-			push_error(R"(Invalid RPC config. The permission ("any_peer"/"authority") must be specified no more than once.)", p_annotation);
+			push_error(R"(Invalid RPC config. The permission ("any_peer"/"authority"/"server") must be specified no more than once.)", p_annotation);
 		} else if (transfer_mode_args > 1) {
 			push_error(R"(Invalid RPC config. The transfer mode ("reliable"/"unreliable"/"unreliable_ordered") must be specified no more than once.)", p_annotation);
+		} else if (relay_args > 1) {
+			push_error(R"(Invalid RPC config. The relay ("relay"/"no_relay") must be specified no more than once.)", p_annotation);
 		}
 	}
 	function->rpc_config = rpc_config;

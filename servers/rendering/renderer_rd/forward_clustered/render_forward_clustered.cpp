@@ -827,6 +827,7 @@ void RenderForwardClustered::_fill_instance_data(RenderListType p_render_list, i
 
 		instance_data.set_compressed_aabb(surface_aabb);
 		instance_data.set_uv_scale(uv_scale);
+		instance_data.set_clip_plane(inst->clip_plane);
 
 		bool cant_repeat = instance_data.flags & INSTANCE_DATA_FLAG_MULTIMESH || inst->mesh_instance.is_valid();
 

@@ -1014,7 +1014,7 @@ static void _find_annotation_arguments(const GDScriptParser::AnnotationNode *p_a
 		}
 	} else if (p_annotation->name == SNAME("@rpc")) {
 		if (p_argument == 0 || p_argument == 1 || p_argument == 2) {
-			static const char *options[7] = { "call_local", "call_remote", "any_peer", "authority", "reliable", "unreliable", "unreliable_ordered" };
+			static const char *options[10] = { "call_local", "call_remote", "any_peer", "authority", "server", "reliable", "unreliable", "unreliable_ordered", "relay", "no_relay"};
 			for (int i = 0; i < 7; i++) {
 				ScriptLanguage::CodeCompletionOption option(options[i], ScriptLanguage::CODE_COMPLETION_KIND_PLAIN_TEXT);
 				option.insert_text = option.display.quote(p_quote_style);

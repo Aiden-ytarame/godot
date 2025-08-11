@@ -731,6 +731,7 @@ void RendererSceneCull::instance_set_base(RID p_instance, RID p_base) {
 				geom->geometry_instance->set_pivot_data(instance->sorting_offset, instance->use_aabb_center);
 				geom->geometry_instance->set_lod_bias(instance->lod_bias);
 				geom->geometry_instance->set_transparency(instance->transparency);
+				geom->geometry_instance->set_clip_plane(instance->clip_plane);
 				geom->geometry_instance->set_use_baked_light(instance->baked_light);
 				geom->geometry_instance->set_use_dynamic_gi(instance->dynamic_gi);
 				geom->geometry_instance->set_use_lightmap(RID(), instance->lightmap_uv_scale, instance->lightmap_slice_index);
@@ -1163,6 +1164,18 @@ void RendererSceneCull::instance_set_ignore_culling(RID p_instance, bool p_enabl
 			idata.flags &= ~InstanceData::FLAG_IGNORE_ALL_CULLING;
 		}
 	}
+}
+
+void RendererSceneCull::instance_set_clip_plane(RID p_instance, const Vector4& p_clip_plane) {
+	Instance *instance = instance_owner.get_or_null(p_instance);
+	ERR_FAIL_NULL(instance);
+
+	if (instance->clip_plane  == p_clip_plane) {
+		return;
+	}
+
+	instance->clip_plane = p_clip_plane;
+	_instance_queue_update(instance, false);
 }
 
 Vector<ObjectID> RendererSceneCull::instances_cull_aabb(const AABB &p_aabb, RID p_scenario) const {
@@ -1730,6 +1743,8 @@ void RendererSceneCull::_update_instance(Instance *p_instance) const {
 		if (p_instance->teleported) {
 			geom->geometry_instance->reset_motion_vectors();
 		}
+
+		geom->geometry_instance->set_clip_plane(p_instance->clip_plane);
 	}
 
 	// note: we had to remove is equal approx check here, it meant that det == 0.000004 won't work, which is the case for some of our scenes.

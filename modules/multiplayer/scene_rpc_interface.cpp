@@ -89,6 +89,7 @@ void SceneRPCInterface::_parse_rpc_config(const Variant &p_config, bool p_for_no
 		cfg.rpc_mode = ((MultiplayerAPI::RPCMode)dict.get("rpc_mode", MultiplayerAPI::RPC_MODE_AUTHORITY).operator int());
 		cfg.transfer_mode = ((MultiplayerPeer::TransferMode)dict.get("transfer_mode", MultiplayerPeer::TRANSFER_MODE_RELIABLE).operator int());
 		cfg.call_local = dict.get("call_local", false).operator bool();
+		cfg.relay = dict.get("relay", true).operator bool();
 		cfg.channel = dict.get("channel", 0).operator int();
 		uint16_t id = ((uint16_t)i);
 		if (p_for_node) {
@@ -111,6 +112,80 @@ const SceneRPCInterface::RPCConfigCache &SceneRPCInterface::_get_node_config(con
 	}
 	rpc_cache[oid] = cache;
 	return rpc_cache[oid];
+}
+
+bool SceneRPCInterface::extract_metadata(const uint8_t *p_packet, int &p_packet_len, uint32_t &p_node_target, uint16_t &p_name_id, int& p_packet_min_size) {
+	// Extract packet meta
+	int packet_min_size = 1;
+	int name_id_offset = 1;
+
+	ERR_FAIL_COND_V_MSG(p_packet_len < packet_min_size, false, "Invalid packet received. Size too small.");
+
+	// Compute the meta size, which depends on the compression level.
+	int node_id_compression = (p_packet[0] & NODE_ID_COMPRESSION_FLAG) >> NODE_ID_COMPRESSION_SHIFT;
+	int name_id_compression = (p_packet[0] & NAME_ID_COMPRESSION_FLAG) >> NAME_ID_COMPRESSION_SHIFT;
+
+	switch (node_id_compression) {
+		case NETWORK_NODE_ID_COMPRESSION_8:
+			packet_min_size += 1;
+			name_id_offset += 1;
+			break;
+		case NETWORK_NODE_ID_COMPRESSION_16:
+			packet_min_size += 2;
+			name_id_offset += 2;
+			break;
+		case NETWORK_NODE_ID_COMPRESSION_32:
+			packet_min_size += 4;
+			name_id_offset += 4;
+			break;
+		default:
+			ERR_FAIL_V_MSG(false, "Was not possible to extract the node id compression mode.");
+
+	}
+	switch (name_id_compression) {
+		case NETWORK_NAME_ID_COMPRESSION_8:
+			packet_min_size += 1;
+			break;
+		case NETWORK_NAME_ID_COMPRESSION_16:
+			packet_min_size += 2;
+			break;
+		default:
+			ERR_FAIL_V_MSG(false, "Was not possible to extract the name id compression mode.");
+	}
+	ERR_FAIL_COND_V_MSG(p_packet_len < packet_min_size, false, "Invalid packet received. Size too small.");
+
+	p_packet_min_size = packet_min_size;
+
+	p_node_target = 0;
+	switch (node_id_compression) {
+		case NETWORK_NODE_ID_COMPRESSION_8:
+			p_node_target = p_packet[1];
+			break;
+		case NETWORK_NODE_ID_COMPRESSION_16:
+			p_node_target = decode_uint16(p_packet + 1);
+			break;
+		case NETWORK_NODE_ID_COMPRESSION_32:
+			p_node_target = decode_uint32(p_packet + 1);
+			break;
+		default:
+			// Unreachable, checked before.
+			CRASH_NOW();
+	}
+
+	p_name_id = 0;
+	switch (name_id_compression) {
+		case NETWORK_NAME_ID_COMPRESSION_8:
+			p_name_id = p_packet[name_id_offset];
+			break;
+		case NETWORK_NAME_ID_COMPRESSION_16:
+			p_name_id = decode_uint16(p_packet + name_id_offset);
+			break;
+		default:
+			// Unreachable, checked before.
+			CRASH_NOW();
+	}
+
+	return true;
 }
 
 String SceneRPCInterface::get_rpc_md5(const Object *p_obj) {
@@ -152,76 +227,34 @@ Node *SceneRPCInterface::_process_get_node(int p_from, const uint8_t *p_packet, 
 }
 
 void SceneRPCInterface::process_rpc(int p_from, const uint8_t *p_packet, int p_packet_len) {
-	// Extract packet meta
-	int packet_min_size = 1;
-	int name_id_offset = 1;
-	ERR_FAIL_COND_MSG(p_packet_len < packet_min_size, "Invalid packet received. Size too small.");
-	// Compute the meta size, which depends on the compression level.
-	int node_id_compression = (p_packet[0] & NODE_ID_COMPRESSION_FLAG) >> NODE_ID_COMPRESSION_SHIFT;
-	int name_id_compression = (p_packet[0] & NAME_ID_COMPRESSION_FLAG) >> NAME_ID_COMPRESSION_SHIFT;
-
-	switch (node_id_compression) {
-		case NETWORK_NODE_ID_COMPRESSION_8:
-			packet_min_size += 1;
-			name_id_offset += 1;
-			break;
-		case NETWORK_NODE_ID_COMPRESSION_16:
-			packet_min_size += 2;
-			name_id_offset += 2;
-			break;
-		case NETWORK_NODE_ID_COMPRESSION_32:
-			packet_min_size += 4;
-			name_id_offset += 4;
-			break;
-		default:
-			ERR_FAIL_MSG("Was not possible to extract the node id compression mode.");
-	}
-	switch (name_id_compression) {
-		case NETWORK_NAME_ID_COMPRESSION_8:
-			packet_min_size += 1;
-			break;
-		case NETWORK_NAME_ID_COMPRESSION_16:
-			packet_min_size += 2;
-			break;
-		default:
-			ERR_FAIL_MSG("Was not possible to extract the name id compression mode.");
-	}
-	ERR_FAIL_COND_MSG(p_packet_len < packet_min_size, "Invalid packet received. Size too small.");
-
-	uint32_t node_target = 0;
-	switch (node_id_compression) {
-		case NETWORK_NODE_ID_COMPRESSION_8:
-			node_target = p_packet[1];
-			break;
-		case NETWORK_NODE_ID_COMPRESSION_16:
-			node_target = decode_uint16(p_packet + 1);
-			break;
-		case NETWORK_NODE_ID_COMPRESSION_32:
-			node_target = decode_uint32(p_packet + 1);
-			break;
-		default:
-			// Unreachable, checked before.
-			CRASH_NOW();
+	uint32_t node_target;
+	uint16_t name_id;
+	int packet_min_size;
+	if (!extract_metadata(p_packet, p_packet_len, node_target, name_id, packet_min_size)) {
+		return;
 	}
 
 	Node *node = _process_get_node(p_from, p_packet, node_target, p_packet_len);
 	ERR_FAIL_NULL_MSG(node, "Invalid packet received. Requested node was not found.");
 
-	uint16_t name_id = 0;
-	switch (name_id_compression) {
-		case NETWORK_NAME_ID_COMPRESSION_8:
-			name_id = p_packet[name_id_offset];
-			break;
-		case NETWORK_NAME_ID_COMPRESSION_16:
-			name_id = decode_uint16(p_packet + name_id_offset);
-			break;
-		default:
-			// Unreachable, checked before.
-			CRASH_NOW();
-	}
-
 	const int packet_len = get_packet_len(node_target, p_packet_len);
 	_process_rpc(node, name_id, p_from, p_packet, packet_len, packet_min_size);
+}
+
+bool SceneRPCInterface::should_relay(int p_from, const uint8_t *p_packet, int p_packet_len) {
+	uint32_t node_target;
+	uint16_t name_id;
+	int packet_min_size;
+	if (!extract_metadata(p_packet, p_packet_len, node_target, name_id, packet_min_size)) {
+		return false;
+	}
+
+	Node *node = _process_get_node(p_from, p_packet, node_target, p_packet_len);
+	ERR_FAIL_NULL_V_MSG(node, false,"Invalid packet received. Requested node was not found.");
+
+	const RPCConfigCache &cache_config = _get_node_config(node);
+	ERR_FAIL_COND_V(!cache_config.configs.has(name_id), false);
+	return cache_config.configs[name_id].relay;
 }
 
 void SceneRPCInterface::_process_rpc(Node *p_node, const uint16_t p_rpc_method_id, int p_from, const uint8_t *p_packet, int p_packet_len, int p_offset) {
@@ -242,6 +275,9 @@ void SceneRPCInterface::_process_rpc(Node *p_node, const uint16_t p_rpc_method_i
 		} break;
 		case MultiplayerAPI::RPC_MODE_AUTHORITY: {
 			can_call = p_from == p_node->get_multiplayer_authority();
+		} break;
+		case MultiplayerAPI::RPC_MODE_SERVER: {
+			can_call = p_from == 1;
 		} break;
 	}
 
@@ -425,7 +461,7 @@ void SceneRPCInterface::_send_rpc(Node *p_node, int p_to, uint16_t p_rpc_id, con
 
 	if (has_all_peers) {
 		for (const int P : targets) {
-			multiplayer->send_command(P, packet_cache.ptr(), ofs);
+			multiplayer->send_command(P, packet_cache.ptr(), ofs, p_config.relay);
 		}
 	} else {
 		// Unreachable because the node ID is never compressed if the peers doesn't know it.
@@ -445,11 +481,11 @@ void SceneRPCInterface::_send_rpc(Node *p_node, int p_to, uint16_t p_rpc_id, con
 			if (confirmed) {
 				// This one confirmed path, so use id.
 				encode_uint32(psc_id, &(packet_cache.write[1]));
-				multiplayer->send_command(P, packet_cache.ptr(), ofs);
+				multiplayer->send_command(P, packet_cache.ptr(), ofs, p_config.relay);
 			} else {
 				// This one did not confirm path yet, so use entire path (sorry!).
 				encode_uint32(0x80000000 | ofs, &(packet_cache.write[1])); // Offset to path and flag.
-				multiplayer->send_command(P, packet_cache.ptr(), ofs + path_len);
+				multiplayer->send_command(P, packet_cache.ptr(), ofs + path_len, p_config.relay);
 			}
 		}
 	}

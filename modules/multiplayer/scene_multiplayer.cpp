@@ -222,6 +222,7 @@ void SceneMultiplayer::_process_packet(int p_from, const uint8_t *p_packet, int 
 
 	switch (packet_type) {
 		case NETWORK_COMMAND_SIMPLIFY_PATH: {
+			print_line("SIMPLIFY");
 			cache->process_simplify_path(p_from, p_packet, p_packet_len);
 		} break;
 
@@ -243,6 +244,7 @@ void SceneMultiplayer::_process_packet(int p_from, const uint8_t *p_packet, int 
 			replicator->on_despawn_receive(p_from, p_packet, p_packet_len);
 		} break;
 		case NETWORK_COMMAND_SYNC: {
+			print_line("SYNC");
 			replicator->on_sync_receive(p_from, p_packet, p_packet_len);
 		} break;
 		default: {
@@ -258,8 +260,8 @@ _FORCE_INLINE_ Error SceneMultiplayer::_send(const uint8_t *p_packet, int p_pack
 }
 #endif
 
-Error SceneMultiplayer::send_command(int p_to, const uint8_t *p_packet, int p_packet_len) {
-	if (server_relay && get_unique_id() != 1 && p_to != 1 && multiplayer_peer->is_server_relay_supported()) {
+Error SceneMultiplayer::send_command(int p_to, const uint8_t *p_packet, int p_packet_len, bool relay) {
+	if (server_relay && relay && get_unique_id() != 1 && p_to != 1 && multiplayer_peer->is_server_relay_supported()) {
 		// Send relay packet.
 		relay_buffer->seek(0);
 		relay_buffer->put_u8(NETWORK_COMMAND_SYS);
@@ -300,7 +302,7 @@ void SceneMultiplayer::_process_sys(int p_from, const uint8_t *p_packet, int p_p
 			_del_peer(peer);
 		} break;
 		case SYS_COMMAND_RELAY: {
-			ERR_FAIL_COND(!server_relay || !multiplayer_peer->is_server_relay_supported());
+			ERR_FAIL_COND(!server_relay || !multiplayer_peer->is_server_relay_supported() );
 			ERR_FAIL_COND(p_packet_len < SYS_CMD_SIZE + 1);
 			const uint8_t *packet = p_packet + SYS_CMD_SIZE;
 			int len = p_packet_len - SYS_CMD_SIZE;
@@ -310,6 +312,12 @@ void SceneMultiplayer::_process_sys(int p_from, const uint8_t *p_packet, int p_p
 				if (unlikely(peer > 0 && !connected_peers.has(peer))) {
 					return;
 				}
+
+				uint8_t packet_type = p_packet[0] & CMD_MASK;
+				if (packet_type == NETWORK_COMMAND_REMOTE_CALL) {
+					ERR_FAIL_COND(!rpc->should_relay(p_from, p_packet, p_packet_len));
+				}
+
 				// Send relay packet.
 				relay_buffer->seek(0);
 				relay_buffer->put_u8(NETWORK_COMMAND_SYS);

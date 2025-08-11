@@ -861,6 +861,7 @@ namespace Godot.Bridge
 
                         rpcConfig["rpc_mode"] = (long)rpcAttr.Mode;
                         rpcConfig["call_local"] = rpcAttr.CallLocal;
+                        rpcConfig["relay"] = rpcAttr.Relay;
                         rpcConfig["transfer_mode"] = (long)rpcAttr.TransferMode;
                         rpcConfig["channel"] = rpcAttr.TransferChannel;
 

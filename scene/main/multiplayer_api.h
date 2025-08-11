@@ -48,6 +48,7 @@ public:
 		RPC_MODE_DISABLED, // No rpc for this method, calls to this will be blocked (default)
 		RPC_MODE_ANY_PEER, // Any peer can call this RPC
 		RPC_MODE_AUTHORITY, // Only the node's multiplayer authority (server by default) can call this RPC
+		RPC_MODE_SERVER, // Only the server can call this RPC
 	};
 
 	static Ref<MultiplayerAPI> create_default_interface();

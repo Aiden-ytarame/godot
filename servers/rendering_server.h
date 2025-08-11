@@ -1466,6 +1466,8 @@ public:
 
 	virtual void instance_set_ignore_culling(RID p_instance, bool p_enabled) = 0;
 
+	virtual void instance_set_clip_plane(RID p_instance, const Vector4& p_clip_plane) = 0;
+
 	// Don't use these in a game!
 	virtual Vector<ObjectID> instances_cull_aabb(const AABB &p_aabb, RID p_scenario = RID()) const = 0;
 	virtual Vector<ObjectID> instances_cull_ray(const Vector3 &p_from, const Vector3 &p_to, RID p_scenario = RID()) const = 0;

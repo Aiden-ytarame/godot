@@ -48,6 +48,7 @@ private:
 		bool call_local = false;
 		MultiplayerPeer::TransferMode transfer_mode = MultiplayerPeer::TRANSFER_MODE_RELIABLE;
 		int channel = 0;
+		bool relay = true;
 
 		bool operator==(RPCConfig const &p_other) const {
 			return name == p_other.name;
@@ -98,9 +99,12 @@ protected:
 	void _parse_rpc_config(const Variant &p_config, bool p_for_node, RPCConfigCache &r_cache);
 	const RPCConfigCache &_get_node_config(const Node *p_node);
 
+	bool extract_metadata(const uint8_t *p_packet, int &p_packet_len, uint32_t &p_node_target, uint16_t &p_name_id, int& p_packet_min_size);
+
 public:
 	Error rpcp(Object *p_obj, int p_peer_id, const StringName &p_method, const Variant **p_arg, int p_argcount);
 	void process_rpc(int p_from, const uint8_t *p_packet, int p_packet_len);
+	bool should_relay(int p_from, const uint8_t *p_packet, int p_packet_len);
 	String get_rpc_md5(const Object *p_obj);
 
 	SceneRPCInterface(SceneMultiplayer *p_multiplayer, SceneCacheInterface *p_cache, SceneReplicationInterface *p_replicator) {

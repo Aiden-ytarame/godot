@@ -22,6 +22,11 @@ namespace Godot
         public bool CallLocal { get; init; }
 
         /// <summary>
+        /// If the method will be relayed to all connected peers, if false, only the server runs it.
+        /// </summary>
+        public bool Relay { get; init; } = true;
+
+        /// <summary>
         /// Transfer mode for the annotated method.
         /// </summary>
         public MultiplayerPeer.TransferModeEnum TransferMode { get; init; } = MultiplayerPeer.TransferModeEnum.Reliable;

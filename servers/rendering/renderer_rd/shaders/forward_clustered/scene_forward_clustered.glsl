@@ -254,7 +254,6 @@ void vertex_shader(vec3 vertex_input,
 
 	if (sc_multimesh()) {
 		//multimesh, instances are for it
-
 #ifdef USE_PARTICLE_TRAILS
 		uint trail_size = (instances.data[instance_index].flags >> INSTANCE_FLAGS_PARTICLE_TRAIL_SHIFT) & INSTANCE_FLAGS_PARTICLE_TRAIL_MASK;
 		uint stride = 3 + 1 + 1; //particles always uses this format
@@ -471,6 +470,8 @@ void vertex_shader(vec3 vertex_input,
 #endif
 
     gl_ClipDistance[0] = dot(scene_data.clip_plane, vec4(worldPos, 1));
+    gl_ClipDistance[1] = dot(instances.data[instance_index].clip_plane, vec4(worldPos, 1));
+
 	vertex_interp = vertex;
 
 	// Normalize TBN vectors before interpolation, per MikkTSpace.

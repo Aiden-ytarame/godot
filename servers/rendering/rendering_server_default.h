@@ -908,6 +908,8 @@ public:
 
 	FUNC2(instance_set_ignore_culling, RID, bool)
 
+	FUNC2(instance_set_clip_plane, RID, const Vector4&)
+
 	// don't use these in a game!
 	FUNC2RC(Vector<ObjectID>, instances_cull_aabb, const AABB &, RID)
 	FUNC3RC(Vector<ObjectID>, instances_cull_ray, const Vector3 &, const Vector3 &, RID)
